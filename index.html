@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>台北轉運站交通達人挑戰賽</title>
+    <style>
+        body {
+            font-family: "Microsoft JhengHei", Arial, sans-serif;
+            background-color: #f0f4f8;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .game-container {
+            background-color: white;
+            max-width: 600px;
+            width: 100%;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1e3d59;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .progress-bar {
+            height: 8px;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background-color: #17b978;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .question-box {
+            display: none;
+        }
+        .question-box.active {
+            display: block;
+        }
+        .question-text {
+            font-size: 1.15rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .options {
+            display: block;
+        }
+        .option-btn {
+            display: block;
+            width: 100%;
+            padding: 12px 15px;
+            background-color: #f7f9fa;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            text-align: left;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-sizing: border-box;
+        }
+        .option-btn:hover {
+            background-color: #e8f4fd;
+            border-color: #3b82f6;
+        }
+        .feedback {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            display: none;
+        }
+        .feedback.correct {
+            display: block;
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .feedback.wrong {
+            display: block;
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .next-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background-color: #1e3d59;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 15px;
+            display: none;
+        }
+        .next-btn:hover {
+            background-color: #17b978;
+        }
+        .result-screen {
+            display: none;
+            text-align: center;
+        }
+        .score-display {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #1e3d59;
+            margin: 20px 0;
+        }
+        .restart-btn {
+            padding: 12px 30px;
+            background-color: #17b978;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-container">
+    <h1>台北轉運站交通達人挑戰賽</h1>
+    <div class="subtitle" id="subtitle">測測看你對交九與周邊轉乘有多了解！</div>
+    
+    <div class="progress-bar" id="progress-bar-container">
+        <div class="progress" id="progress-bar"></div>
+    </div>
+
+    <div id="quiz-area">
+        </div>
+
+    <div class="result-screen" id="result-screen">
+        <h2>挑戰結束！</h2>
+        <div id="evaluation-text">你的交通達人指數：</div>
+        <div class="score-display" id="score-display">0分</div>
+        <p id="result-desc"></p>
+        <button class="restart-btn" onclick="restartGame()">重新挑戰</button>
+    </div>
+</div>
+
+<script>
+    const quizData = [
+        {
+            question: "1. 台北轉運站（交九）內部，主要提供前往哪些地方的國道客運？",
+            options: [
+                "基隆與雙北市區",
+                "桃園以南、宜蘭等地",
+                "花蓮與台東地區",
+                "僅限桃園機場接駁"
+            ],
+            correct: 1,
+            info: "正確答案：桃園以南、宜蘭等地。交九主要提供中南部及國道5號的客運服務。"
+        },
+        {
+            question: "2. 如果你想搭乘「葛瑪蘭客運」前往宜蘭、羅東或礁溪，你應該在何處購票搭乘？",
+            options: [
+                "台北車站忠孝站牌",
+                "承德路路邊",
+                "台北轉運站站體內部",
+                "捷運北門站外"
+            ],
+            correct: 2,
+            info: "正確答案：台北轉運站站體內部。葛瑪蘭客運是進駐轉運站內部的9家業者之一。"
+        },
+        {
+            question: "3. 朋友想要搭客運去「南投」或「屏東」，根據進駐業者的路線，推薦哪一家客運最合適？",
+            options: [
+                "葛瑪蘭客運",
+                "新竹客運",
+                "國光客運",
+                "豪泰客運"
+            ],
+            correct: 2,
+            info: "正確答案：國光客運。國光客運在站內提供往返台中、南投、嘉義、台南、高雄、屏東等地的路線。"
+        },
+        {
+            question: "4. 如果要轉乘市區公車「304承德」或「63」路，應該前往哪一個周邊站牌搭乘？",
+            options: [
+                "台北車站（承德）",
+                "台北車站（鄭州）",
+                "台北車站（忠孝）",
+                "台北車站（青島）"
+            ],
+            correct: 0,
+            info: "正確答案：台北車站（承德）。304承德、63、660等線均在此站牌搭乘。"
+        },
+        {
+            question: "5. 關於台北轉運站與「軌道運輸」的連通性，以下敘述何者正確？",
+            options: [
+                "必須走到戶外馬路才能轉乘捷運",
+                "站內直接與台北車站主體建築群連通，可直接步行至捷運、高鐵、台鐵",
+                "目前只能連通機場捷運，無法走到高鐵",
+                "轉乘台鐵必須先搭乘市區公車"
+            ],
+            correct: 1,
+            info: "正確答案：站內直接連通。台北轉運站與台北車站主體大樓相連，地下通道可直達捷運（板南線、淡水信義線）、高鐵及台鐵。"
+        }
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let hasAnswered = false;
+
+    const quizArea = document.getElementById('quiz-area');
+    const progressBar = document.getElementById('progress-bar');
+    const resultScreen = document.getElementById('result-screen');
+    const scoreDisplay = document.getElementById('score-display');
+    const resultDesc = document.getElementById('result-desc');
+    const progressBarContainer = document.getElementById('progress-bar-container');
+    const subtitle = document.getElementById('subtitle');
+
+    function initQuiz() {
+        quizArea.innerHTML = '';
+        quizData.forEach((data, index) => {
+            const questionBox = document.createElement('div');
+            questionBox.className = `question-box ${index === 0 ? 'active' : ''}`;
+            questionBox.id = `q-${index}`;
+
+            const qText = document.createElement('div');
+            qText.className = 'question-text';
+            qText.innerText = data.question;
+            questionBox.appendChild(qText);
+
+            const optionsDiv = document.createElement('div');
+            optionsDiv.className = 'options';
+
+            data.options.forEach((option, oIndex) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = option;
+                btn.onclick = () => checkAnswer(oIndex, data.correct, index);
+                optionsDiv.appendChild(btn);
+            });
+
+            questionBox.appendChild(optionsDiv);
+
+            const feedback = document.createElement('div');
+            feedback.id = `feedback-${index}`;
+            feedback.className = 'feedback';
+            questionBox.appendChild(feedback);
+
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'next-btn';
+            nextBtn.id = `next-${index}`;
+            nextBtn.innerText = index === quizData.length - 1 ? "看總分" : "下一題";
+            nextBtn.onclick = () => nextQuestion();
+            questionBox.appendChild(nextBtn);
+
+            quizArea.appendChild(questionBox);
+        });
+        updateProgressBar();
+    }
+
+    function updateProgressBar() {
+        const percent = (currentQuestionIndex / quizData.length) * 100;
+        progressBar.style.width = `${percent}%`;
+    }
+
+    function checkAnswer(selectedIndex, correctIndex, qIndex) {
+        if (hasAnswered) return;
+        hasAnswered = true;
+
+        const currentQuestionBox = document.getElementById(`q-${qIndex}`);
+        const buttons = currentQuestionBox.getElementsByClassName('option-btn');
+        const feedback = document.getElementById(`feedback-${qIndex}`);
+        const nextBtn = document.getElementById(`next-${qIndex}`);
+
+        // 停用所有選項按鈕
+        for (let button of buttons) {
+            button.style.cursor = 'default';
+        }
+
+        if (selectedIndex === correctIndex) {
+            buttons[selectedIndex].style.backgroundColor = '#d4edda';
+            buttons[selectedIndex].style.borderColor = '#28a745';
+            feedback.innerText = "⭕ 答對了！\n" + quizData[qIndex].info;
+            feedback.className = "feedback correct";
+            score += 20;
+        } else {
+            buttons[selectedIndex].style.backgroundColor = '#f8d7da';
+            buttons[selectedIndex].style.borderColor = '#dc3545';
+            buttons[correctIndex].style.backgroundColor = '#d4edda';
+            buttons[correctIndex].style.borderColor = '#28a745';
+            feedback.innerText = "❌ 答錯囉！\n" + quizData[qIndex].info;
+            feedback.className = "feedback wrong";
+        }
+
+        nextBtn.style.display = 'block';
+    }
+
+    function nextQuestion() {
+        const currentQuestionBox = document.getElementById(`q-${currentQuestionIndex}`);
+        currentQuestionBox.classList.remove('active');
+
+        currentQuestionIndex++;
+        hasAnswered = false;
+
+        if (currentQuestionIndex < quizData.length) {
+            const nextQuestionBox = document.getElementById(`q-${currentQuestionIndex}`);
+            nextQuestionBox.classList.add('active');
+            updateProgressBar();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        progressBarContainer.style.display = 'none';
+        subtitle.style.display = 'none';
+        resultScreen.style.display = 'block';
+        scoreDisplay.innerText = `${score} 分`;
+
+        let desc = "";
+        if (score === 100) {
+            desc = "太厲害了！你根本是台北轉運站的活地圖，閉著眼睛都不會迷路！";
+        } else if (score >= 60) {
+            desc = "非常不錯！你對轉運站與周邊公車有很好的概念，出行絕對沒問題。";
+        } else {
+            desc = "別擔心！台北車站周邊的確像個大迷宮，多看幾次指南包你下次變達人！";
+        }
+        resultDesc.innerText = desc;
+    }
+
+    function restartGame() {
+        currentQuestionIndex = 0;
+        score = 0;
+        hasAnswered = false;
+        progressBarContainer.style.display = 'block';
+        subtitle.style.display = 'block';
+        resultScreen.style.display = 'none';
+        initQuiz();
+    }
+
+    // 初始化遊戲
+    initQuiz();
+</script>
+
+</body>
+</html>
